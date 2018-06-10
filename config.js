@@ -18,7 +18,7 @@ module.exports = {
     selector: {
         TRACK_ROW: 'div.page-users__tracks > div.longlist_tracks > div.longlist__cont > div.d-track',
         TRACK_ROW_TITLE: 'div.d-track__name > a',
-        TRACK_ROW_ALBUM: '.d-track__artists > a',
+        TRACK_ROW_ARTIST: '.d-track__artists > a',
         FOOTER: 'div.footer',
         ALL_TRACKS_BTN: 'div.centerblock-wrapper > div.centerblock > div > div > div.page-users__subhead > div.like-filter__right-side > nav > button.like-filter__all',
         LOGIN_INPUT: '#root > div > div.passport-Page-Content > div.passport-Domik > input[name="login"]',

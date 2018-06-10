@@ -4,6 +4,7 @@ const _ = require('lodash');
 const crypto = require('crypto');
 const EventEmitter = require('events');
 const log = require('intel').getLogger('app.crawler');
+const browserLog = require('intel').getLogger('app.crawler.browser');
 
 
 function md5FromString(string) {
@@ -36,10 +37,22 @@ class Crawler extends EventEmitter {
         this.watchInterval = null;
         this.isWatching = false;
 
+        this.tracks = {};
+        this._previousCount = 0;
+
         this._watchdog = () => {
             this.emit('pollstart');
-            this._scrollPageTopToBottomAndScrape().then(() => {
+            this._previousCount = _.size(this.tracks);
+            this._updateList().then(() => {
                 this.emit('pollfinish');
+                if (this._previousCount > 0 && this._previousCount != _.size(this.tracks)) {
+                    log.info('Tracklist has been changed');
+                    this.emit('trackschanged');
+                }
+                else if (this._previousCount == 0 && _.size(this.tracks) > 0) {
+                    log.info('Tracklist scraped');
+                    this.emit('tracksgot');
+                }
             });            
         };
 
@@ -51,23 +64,31 @@ class Crawler extends EventEmitter {
             }
         });
 
-        this.tracks = {};
+        this._updateList = async () => {
+            log.info('Updating tracklist...');
+            await this.page.reload();
+            //await this.page.click(this._opts.selectors.ALL_TRACKS_BTN);
+            //await this.page.waitFor(2000);
+            await this._scrollPageTopToBottomAndScrape();
+            return Promise.resolve();
+        };
 
         this._scrapeTracks = async () => {
             let tracks = {};
             let tracksRaw = await this.page.evaluate(function (opts) {
-                const extractedElements = document.querySelectorAll(opts.selectors.TRACK_ROW);
-                const items = [];
-                for (let element of extractedElements) {
-                    let titleEl = element.querySelector(opts.selectors.TRACK_ROW_TITLE);
-                    let artistEl = element.querySelector(opts.selectors.TRACK_ROW_ARTIST);
-                    if (!titleEl || !artistEl) continue;
-                    items.push({
-                        title: titleEl.innerText,
-                        trackRef: titleEl.getAttribute('href'),
-                        artist: artistEl.innerText,
-                        artistRef: artistEl.getAttribute('href')
-                    });
+                var extractedElements = document.querySelectorAll(opts.selectors.TRACK_ROW);
+                var items = [];
+                for (var element of extractedElements) {
+                    var titleEl = element.querySelector(opts.selectors.TRACK_ROW_TITLE);
+                    var artistEl = element.querySelector(opts.selectors.TRACK_ROW_ARTIST);
+                    if (titleEl) {
+                        items.push({
+                            title: titleEl.innerText,
+                            trackRef: titleEl.getAttribute('href'),
+                            artist: artistEl.innerText,
+                            artistRef: artistEl.getAttribute('href')
+                        });
+                    }
                 }
                 return items;
             }, this._opts);
@@ -77,11 +98,11 @@ class Crawler extends EventEmitter {
                 tracks[trackId] = track;
                 tracks[trackId].id = trackId;
             }
+
             return Promise.resolve(tracks);
         };
 
         this._scrollPageTopToBottomAndScrape = async () => {
-            let scrapeResults = {};
             log.verbose('Scrolling page...');
             await this.page.evaluate('window.scrollTo(0, 0)');
             while (true) {
@@ -117,6 +138,10 @@ class Crawler extends EventEmitter {
             log.info('Browser disconnected');
             this.emit('browser.disconnected');
             this.stopWatch();
+        });
+
+        this.page.on('console', msg => {
+            browserLog.info(`${msg.text()}`);
         });
 
         return Promise.resolve();
