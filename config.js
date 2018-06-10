@@ -1,3 +1,5 @@
+const intel = require('intel');
+
 
 module.exports = {
     HEADLESS: false,
@@ -9,7 +11,7 @@ module.exports = {
     
     urls: {
         ROOT: '',
-        ALL_TRACKS: '',
+        ALL_TRACKS: 'https://music.yandex.ru/users/vlad.d.markin/tracks',
         LOGIN: 'https://passport.yandex.ru'
     },
     
@@ -24,3 +26,7 @@ module.exports = {
         LOGIN_SUBMIT: '#root > div > div.passport-Page-Content > div.passport-Domik > button.passport-Button[type="submit"]'
     }
 };
+
+// intel.config({
+
+// });

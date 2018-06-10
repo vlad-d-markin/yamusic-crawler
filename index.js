@@ -6,6 +6,8 @@ const crypto = require('crypto');
 const config = require('./config');
 
 
+const Crawler = require('./crawler');
+
 
 function md5FromString(string) {
     return crypto.createHash('md5').update(string).digest("hex");
@@ -19,7 +21,7 @@ function generateTrackId(track) {
 
 async function scrapeTracks(page) {
     let tracks = {};
-    let tracksRaw = await page.evaluate(function() {
+    let tracksRaw = await page.evaluate(function(config) {
         const extractedElements = document.querySelectorAll(config.selector.TRACK_ROW);
         const items = [];
         for (let element of extractedElements) {
@@ -34,7 +36,7 @@ async function scrapeTracks(page) {
             });
         }
         return items;
-    });
+    }, config);
 
     for (let track of tracksRaw) {
         let trackId = generateTrackId(track);
@@ -88,6 +90,15 @@ async function passportLogin(page, login, password) {
 
 
 (async () => {
+    const crawler = new Crawler({
+        tracksUrl: config.urls.ALL_TRACKS,
+        selectors: config.selector
+    });
+
+    await crawler.start();
+    await crawler.watch();
+
+    return;
     const browser = await puppeteer.launch({ headless: config.HEADLESS });
     const page = await browser.newPage();
   
@@ -129,8 +140,8 @@ async function passportLogin(page, login, password) {
         await page.click(config.selector.ALL_TRACKS_BTN);
         await page.waitFor(2000);
 
-    let tracks = await scrollPageTopToBottomAndScrape(page, scrapeTracks);
-    //console.log(tracks);
+        let tracks = await scrollPageTopToBottomAndScrape(page, scrapeTracks);
+        //console.log(tracks);
   }
   catch (e) {
       console.error(e);
