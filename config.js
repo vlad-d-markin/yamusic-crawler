@@ -21,9 +21,9 @@ module.exports = {
         TRACK_ROW_ARTIST: '.d-track__artists > a',
         FOOTER: 'div.footer',
         ALL_TRACKS_BTN: 'div.centerblock-wrapper > div.centerblock > div > div > div.page-users__subhead > div.like-filter__right-side > nav > button.like-filter__all',
-        LOGIN_INPUT: '#root > div > div.passport-Page-Content > div.passport-Domik > input[name="login"]',
-        PASSWORD_INPUT: '#root > div > div.passport-Page-Content > div.passport-Domik > input[name="passwd"]',
-        LOGIN_SUBMIT: '#root > div > div.passport-Page-Content > div.passport-Domik > button.passport-Button[type="submit"]'
+        LOGIN_INPUT: 'input[name="login"]',
+        PASSWORD_INPUT: 'input[name="passwd"]',
+        LOGIN_SUBMIT: 'button[type="submit"]'
     }
 };
 
